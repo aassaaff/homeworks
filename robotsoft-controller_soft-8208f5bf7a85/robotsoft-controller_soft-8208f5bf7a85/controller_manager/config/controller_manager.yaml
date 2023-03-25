@@ -1,0 +1,4 @@
+server_address:   "http://10.40.10.10:8092/"
+modbus_ip:        "11.0.0.30" #"192.168.168.10"
+modbus_port:      502
+loop_hz:          2

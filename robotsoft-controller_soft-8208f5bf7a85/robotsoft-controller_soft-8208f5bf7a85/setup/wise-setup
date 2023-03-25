@@ -1,0 +1,100 @@
+# use QR scanner and get the mac id of the device (should be for port B)
+# connect port B to network and find the device:
+
+sudo nmap -sn [YOUR IP]/24
+
+# then ssh into the device as root.  
+
+# first, install nano:
+apt install nano
+
+# now check:
+nmcli c s eth0
+nmcli c s eth1
+
+# port A (eth1) should be:
+ipv4.method:                            auto 
+
+# if it isnt:
+nmcli c m eth1 ipv4.method auto
+nmcli con mod eth1 ipv4.addresses "" ipv4.gateway ""
+
+# check ifconfig and find the mac id for port A (eth1)
+# now disconnect and connect to port A and again run:
+sudo nmap -sn [YOUR IP]/24
+
+# now ssh into the device.
+
+# now add user:
+sudo useradd advantech
+sudo passwd advantech
+
+# enter the password 123456
+
+# now:
+mkdir /home/advantech
+usermod --shell /bin/bash --home /home/advantech advantech
+chown -R advantech:advantech /home/advantech
+cp /etc/skel/.* /home/advantech/
+chown root:root /usr/bin/sudo && chmod 4755 /usr/bin/sudo
+adduser advantech sudo
+
+# log out and ssh using advantech user.
+# now lets set caja env:
+
+sudo apt update
+sudo apt install bash-completion
+echo 'source /etc/profile.d/bash_completion.sh' | sudo tee -a ~/.bashrc
+sudo apt install build-essential
+sudo apt install screen
+sudo apt install libssl-dev
+sudo apt install libboost-all-dev
+sudo apt install openvpn
+sudo apt install git
+
+## now setup caja env:
+
+sudo mkdir /caja
+sudo chown $USER:$USER /caja
+cd /caja
+git clone https://cajasystems_support@bitbucket.org/robotsoft/3rd_parties.git
+git clone https://cajasystems_support@bitbucket.org/robotsoft/caja_scripts.git
+git clone https://cajasystems_support@bitbucket.org/robotsoft/controller_soft.git
+cd controller_soft && git checkout safety-fence
+cd ../3rd_parties && git checkout cpr1.5.2
+
+# NOTE: This will take a very long time (1 - 2 hours)
+# it will stop you and you will need to press Enter until it asks y/n, press 'y' to accept the license, then 'n' so it will install to /opt.
+sudo /caja/controller_soft/setup/install-cmake.sh
+
+# once done start installing packages:
+/caja/3rd_parties/install_cpr/install_cpr.sh
+cd /caja/3rd_parties && tar -xzvf json-3.9.1.tar.gz && cd json-3.9.1 && mkdir build && cd build && cmake .. && make && sudo make install
+cd /caja/3rd_parties && tar -xzvf spdlog-1.7.0.tar.gz && cd spdlog-1.7.0 && mkdir build && cd build && cmake .. && make && sudo make install
+cd /caja/3rd_parties && tar -xzvf yaml-cpp-yaml-cpp-0.6.3.tar.gz && cd yaml-cpp-yaml-cpp-0.6.3 && mkdir build && cd build && cmake .. && make && sudo make install
+
+# now lets compile controller soft:
+cd /caja/controller_soft && mkdir build && cd build && cmake .. && make
+
+# need to set port B to have static ip:
+sudo ifconfig eth0 11.0.0.2 netmask 255.255.255.0 up
+sudo nmcli con mod eth0 connection.autoconnect yes
+# now reconnect ethernet cable to port B and make sure the ip is set with ifconfig
+
+# run the port forwarding script:
+/caja/controller_soft/setup/port_forawarding_setup.sh
+
+
+# finally add to /etc/rc.local the cmd to execute:
+echo '/caja/controller_soft/run_controller_manager.sh' | sudo tee -a /etc/rc.local
+## ALL DONE
+
+
+
+
+
+
+
+
+
+

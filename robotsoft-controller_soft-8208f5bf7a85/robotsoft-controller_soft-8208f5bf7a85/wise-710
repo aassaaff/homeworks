@@ -1,0 +1,26 @@
+connect to port B and then:
+
+wise710a1-3ADB-3adb
+
+# OPTION1:
+ssh advantech@11.0.0.2
+pswd: 123456
+C4:00:AD:44:3A:DB
+
+# OPTION2:
+ssh advantech@10.0.10.203
+pswd: 123456
+C4:00:AD:44:3A:DB
+
+try one of them.
+
+
+on caja_office:
+10.0.10.47
+
+
+old modbus device:
+192.168.168.10
+
+
+
